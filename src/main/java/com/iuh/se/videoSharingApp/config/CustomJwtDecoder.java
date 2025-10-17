@@ -1,10 +1,12 @@
 package com.iuh.se.videoSharingApp.config;
 
+import com.iuh.se.videoSharingApp.exception.AppException;
 import com.iuh.se.videoSharingApp.service.AuthService;
 import com.iuh.se.videoSharingApp.util.JwtSecretReader;
 import com.nimbusds.jose.JOSEException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.jose.jws.MacAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -13,6 +15,7 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.spec.SecretKeySpec;
+import javax.security.auth.login.CredentialExpiredException;
 import java.text.ParseException;
 
 @Component
@@ -34,7 +37,7 @@ public class CustomJwtDecoder implements JwtDecoder {
     public Jwt decode(String token) throws JwtException {
         try {
             authService.verify(token);
-        } catch (ParseException | JOSEException e) {
+        } catch (JOSEException | ParseException e) {
             throw new RuntimeException(e);
         }
 

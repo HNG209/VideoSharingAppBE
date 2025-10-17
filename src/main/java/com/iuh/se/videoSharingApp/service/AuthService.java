@@ -5,6 +5,7 @@ import com.iuh.se.videoSharingApp.dto.response.UserResponse;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jwt.SignedJWT;
 
+import javax.security.auth.login.CredentialExpiredException;
 import java.text.ParseException;
 
 public interface AuthService {

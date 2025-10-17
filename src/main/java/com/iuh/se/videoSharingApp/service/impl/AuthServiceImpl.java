@@ -15,9 +15,12 @@ import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import org.springframework.stereotype.Service;
 
+import javax.security.auth.login.CredentialExpiredException;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Instant;
@@ -42,10 +45,15 @@ public class AuthServiceImpl implements AuthService {
         JWSVerifier verifier = new MACVerifier(SECRET_KEY.getBytes());
         SignedJWT signedJWT = SignedJWT.parse(token);
         Date exp = signedJWT.getJWTClaimsSet().getExpirationTime();
-        boolean verified = signedJWT.verify(verifier) && exp.after(new Date());
+        boolean expired = exp.before(new Date());
+
+        if(expired)
+            throw new CredentialsExpiredException("Session expired");
+
+        boolean verified = signedJWT.verify(verifier);
 
         if(!verified)
-            throw new AppException(ErrorCode.UNAUTHENTICATED);
+            throw new BadCredentialsException("Bad token");
 
         return signedJWT;
     }
