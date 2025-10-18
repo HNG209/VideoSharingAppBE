@@ -2,6 +2,7 @@ package com.iuh.se.videoSharingApp.exception;
 
 import com.iuh.se.videoSharingApp.util.ApiResponse;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -31,6 +32,19 @@ public class GlobalExceptionHandler {
         try {
             code = ErrorCode.valueOf(key);
         } catch (Exception e){}
+
+        response.setCode(code.getCode());
+        response.setMessage(code.getMessage());
+
+        return ResponseEntity
+                .status(code.getStatusCode())
+                .body(response);
+    }
+
+    @ExceptionHandler(value = AuthorizationDeniedException.class)
+    ResponseEntity<ApiResponse<Void>> handleAuthorizationDeniedException(AuthorizationDeniedException exception) {
+        ApiResponse<Void> response = new ApiResponse<>();
+        ErrorCode code = ErrorCode.UNAUTHORIZED;
 
         response.setCode(code.getCode());
         response.setMessage(code.getMessage());

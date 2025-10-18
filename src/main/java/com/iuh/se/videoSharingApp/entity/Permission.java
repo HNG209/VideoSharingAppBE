@@ -3,21 +3,16 @@ package com.iuh.se.videoSharingApp.entity;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.util.List;
-import java.util.Set;
-
-@Document(collection = "roles")
+@Document(collection = "permissions")
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
+@NoArgsConstructor
 @Builder
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class Role {
+public class Permission {
     @Id
     String name;
     String description;
-    List<String> permissionNames; // id của permission
 }

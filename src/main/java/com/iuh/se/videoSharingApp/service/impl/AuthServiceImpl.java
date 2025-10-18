@@ -27,6 +27,7 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.Optional;
+import java.util.StringJoiner;
 import java.util.UUID;
 
 @Service
@@ -65,7 +66,7 @@ public class AuthServiceImpl implements AuthService {
                 .subject(user.getUsername())
                 .issuer("hng209")
                 .issueTime(new Date())
-//                .claim("scope", buildScope(user))
+                .claim("scope", buildScope(user))
                 .jwtID(UUID.randomUUID().toString())
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
@@ -95,19 +96,11 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-//    private String buildScope(User user) {
-//        StringJoiner joiner = new StringJoiner(" ");
-//        if(!user.getRoles().isEmpty())
-//            user.getRoles().forEach(role -> {
-//                        joiner.add("ROLE_" + role.getName());
-//
-//                        role.getPermissions()
-//                                .stream()
-//                                .map(Permission::getName)
-//                                .forEach(joiner::add);
-//                    }
-//            );
-//
-//        return joiner.toString();
-//    }
+    private String buildScope(User user) {
+        StringJoiner joiner = new StringJoiner(" ");
+        if(user.getRoleNames() != null && !user.getRoleNames().isEmpty())
+            user.getRoleNames().forEach(joiner::add);
+
+        return joiner.toString();
+    }
 }
