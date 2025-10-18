@@ -25,16 +25,16 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/register")
-    public ApiResponse<UserResponse> register(@Valid @RequestBody UserRegistrationRequest user) {
+    public ApiResponse<UserResponse> register(@Valid @RequestBody UserRegistrationRequest request) {
         return ApiResponse.<UserResponse>builder()
-                .result(userService.register(user.getUsername(), user.getEmail(), user.getPassword()))
+                .result(userService.register(request))
                 .build();
     }
 
     @PostMapping("/login")
     public ApiResponse<AuthResponse> login(@Valid @RequestBody AuthenticationRequest request) throws JOSEException {
         return ApiResponse.<AuthResponse>builder()
-                .result(authService.login(request.getEmail(), request.getPassword()))
+                .result(authService.login(request))
                 .build();
     }
 }

@@ -1,5 +1,6 @@
 package com.iuh.se.videoSharingApp.service.impl;
 
+import com.iuh.se.videoSharingApp.dto.request.UserRegistrationRequest;
 import com.iuh.se.videoSharingApp.dto.response.UserResponse;
 import com.iuh.se.videoSharingApp.entity.Role;
 import com.iuh.se.videoSharingApp.entity.User;
@@ -29,17 +30,17 @@ public class UserServiceImpl implements UserService {
     private UserMapper userMapper;
 
     @Override
-    public UserResponse register(String username, String email, String password) {
-        if (userRepository.findByEmail(email).isPresent())
+    public UserResponse register(UserRegistrationRequest request) {
+        if (userRepository.findByEmail(request.getEmail()).isPresent())
             throw new AppException(ErrorCode.EMAIL_EXISTED);
 
         Role defaultRole = roleRepository.findById("ROLE_USER")
                 .orElseThrow(() -> new AppException(ErrorCode.ROLE_NOT_FOUND));
 
-        String hashed = BCrypt.hashpw(password, BCrypt.gensalt());
+        String hashed = BCrypt.hashpw(request.getPassword(), BCrypt.gensalt());
         User user = User.builder()
-                .username(username)
-                .email(email)
+                .username(request.getUsername())
+                .email(request.getEmail())
                 .password(hashed)
                 .roleNames(List.of(defaultRole.getName()))
                 .build();
@@ -48,7 +49,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @PreAuthorize("hasRole(\"ADMIN1\")")
+    @PreAuthorize("hasAuthority('CREATE_VIDEO')")
     public List<UserResponse> getAll() {
         return userRepository.findAll()
                 .stream()

@@ -1,10 +1,13 @@
 package com.iuh.se.videoSharingApp.service.impl;
 
+import com.iuh.se.videoSharingApp.dto.request.AuthenticationRequest;
 import com.iuh.se.videoSharingApp.dto.response.AuthResponse;
 import com.iuh.se.videoSharingApp.dto.response.UserResponse;
+import com.iuh.se.videoSharingApp.entity.Role;
 import com.iuh.se.videoSharingApp.entity.User;
 import com.iuh.se.videoSharingApp.exception.AppException;
 import com.iuh.se.videoSharingApp.exception.ErrorCode;
+import com.iuh.se.videoSharingApp.repository.RoleRepository;
 import com.iuh.se.videoSharingApp.repository.UserRepository;
 import com.iuh.se.videoSharingApp.service.AuthService;
 import com.iuh.se.videoSharingApp.util.JwtSecretReader;
@@ -25,20 +28,19 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Date;
-import java.util.Optional;
-import java.util.StringJoiner;
-import java.util.UUID;
+import java.util.*;
 
 @Service
 public class AuthServiceImpl implements AuthService {
+    private final RoleRepository roleRepository;
     private final UserRepository userRepository;
     private final String SECRET_KEY;
 
     @Autowired
-    public AuthServiceImpl(JwtSecretReader reader, UserRepository userRepository) {
+    public AuthServiceImpl(JwtSecretReader reader, UserRepository userRepository, RoleRepository roleRepository) {
         SECRET_KEY = reader.getSecret();
         this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -61,12 +63,18 @@ public class AuthServiceImpl implements AuthService {
 
     public String generateToken(User user) throws JOSEException {
         JWSHeader header = new JWSHeader(JWSAlgorithm.HS256);
+        List<String> permissions = new ArrayList<>();
+
+        for (String roleName : user.getRoleNames()) {
+            roleRepository.findById(roleName).ifPresent(role -> permissions.addAll(role.getPermissionNames()));
+        }
 
         JWTClaimsSet jwtClaimsSet = new JWTClaimsSet.Builder()
                 .subject(user.getUsername())
                 .issuer("hng209")
                 .issueTime(new Date())
-                .claim("scope", buildScope(user))
+                .claim("permissions", permissions)
+                .claim("roles", user.getRoleNames())
                 .jwtID(UUID.randomUUID().toString())
                 .expirationTime(new Date(
                         Instant.now().plus(1, ChronoUnit.HOURS).toEpochMilli()
@@ -80,12 +88,12 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponse login(String email, String password) throws JOSEException {
-        Optional<User> userOpt = userRepository.findByEmail(email);
+    public AuthResponse login(AuthenticationRequest request) throws JOSEException {
+        Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
         if (userOpt.isEmpty())
             throw new AppException(ErrorCode.EMAIL_NOT_FOUND);
 
-        if (!BCrypt.checkpw(password, userOpt.get().getPassword())) {
+        if (!BCrypt.checkpw(request.getPassword(), userOpt.get().getPassword())) {
             throw new AppException(ErrorCode.PASSWORD_INVALID);
         }
 
